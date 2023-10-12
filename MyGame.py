@@ -4,15 +4,17 @@ import sys
 
 pygame.init()
 
-field_size = 14 # количество клеток поля
-cell_size = 30 # ширина одной клетки в пикселях
+field_size = 14  # количество клеток поля
+cell_size = 30  # ширина одной клетки в пикселях
 width = height = field_size * cell_size  # Ширина, высота экрана
 FPS = 60  # Число кадров в секунду
 
+YaUzheHZCHtoPisat = 208
+
 EtotHodit = random.randint(0, 1)
 UpravlenieDlyaCHainikov = pygame.image.load("управление.png")
-print(str(EtotHodit))
-sc = pygame.display.set_mode((width + 208, height))  # Создаем экран
+print("EtotHodit = ", EtotHodit)
+sc = pygame.display.set_mode((YaUzheHZCHtoPisat + width + 208, height))  # Создаем экран
 clock = pygame.time.Clock()  # Создаем часы для FPS
 square = pygame.Rect(0, 0, cell_size, cell_size)
 
@@ -36,19 +38,22 @@ for i in range(1, field_size - 1):  # случайная расстановка 
 
 def game_field_update(p_name, x, y):  # обновление данных игрового поля
     global EtotHodit
-    if p_name == "player1" and EtotHodit == 1 or p_name == "player2" and EtotHodit == 0:
+    if (p_name == "player1" and EtotHodit == 1) or (p_name == "player2" and EtotHodit == 0):
         return
+    # print(*game_field, sep='\n')
     if p_name == "player1":
         p_num = 0
-        EtotHodit = 1
     else:
         p_num = 1
-        EtotHodit = 0
     x, y = players[p_num][0]+x, players[p_num][1]+y  # вычисление новых координат игрока
     if not is_move_correct(x, y):
         return
-    if p_name == "player1" and EtotHodit == 1 or p_name == "player2" and EtotHodit == 0:
-        return
+    if p_name == "player1":
+        EtotHodit = 1
+    else:
+        EtotHodit = 0
+    # if (p_name == "player1" and EtotHodit == 1) or (p_name == "player2" and EtotHodit == 0):
+    #     return
     game_field[players[p_num][0]][players[p_num][1]] = '0'
     players[p_num] = [x, y]
     game_field[x][y] = p_name
@@ -92,20 +97,20 @@ while True:
 
     sc.fill((0, 0, 0))
     for i in range(field_size):
-        pygame.draw.line(sc, (72, 60, 50), ((i+1)*cell_size, 0), ((i+1)*cell_size, height))
+        pygame.draw.line(sc, (72, 60, 50), ((i+1)*cell_size + YaUzheHZCHtoPisat, 0), ((i+1)*cell_size + YaUzheHZCHtoPisat, height))
     for i in range(field_size):
-        pygame.draw.line(sc, (72, 60, 50), (0, (i+1)*cell_size), (width, (i+1)*cell_size))
-    sc.blit(UpravlenieDlyaCHainikov, (420, 0))
+        pygame.draw.line(sc, (72, 60, 50), (YaUzheHZCHtoPisat, (i+1)*cell_size), (width+ YaUzheHZCHtoPisat, (i+1)*cell_size))
+    sc.blit(UpravlenieDlyaCHainikov, (420 + YaUzheHZCHtoPisat, 0))
 
-    pygame.draw.line(sc, (128, 128, 128), (width, 0), (0, width))
+    pygame.draw.line(sc, (128, 128, 128), (width + YaUzheHZCHtoPisat, 0), (YaUzheHZCHtoPisat, width))
     for i in range(field_size):
         for j in range(field_size):
             if game_field[i][j] == "player1":
-                square.x = i * cell_size
+                square.x = i * cell_size + YaUzheHZCHtoPisat
                 square.y = j * cell_size
                 pygame.draw.rect(sc, (255, 0, 0), square)
             elif game_field[i][j] == "player2":
-                square.x = i * cell_size
+                square.x = i * cell_size + YaUzheHZCHtoPisat
                 square.y = j * cell_size
                 pygame.draw.rect(sc, (0, 128, 0), square)
             elif game_field[i][j] == "wall":

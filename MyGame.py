@@ -13,10 +13,13 @@ YaUzheHZCHtoPisat = 208
 inventory = {"wall": [32, 32, 20], "spawn": [1, 1, 1], "slow": [3, 3, 0], "shield": [1, 1, 1],
              "heal": [2, 2, 0], "laser": [1, 1, 0]}
 
+
+
 EtotHodit = random.randint(0, 1)
 UpravlenieDlyaCHainikov = pygame.image.load("управление.png")
 inventoryImg = pygame.image.load("инвентарь_временный.png")
 inventoryPixelShift = 14
+pervayaKnopkaCoord = [160, 19]
 print("EtotHodit = ", EtotHodit)
 sc = pygame.display.set_mode((YaUzheHZCHtoPisat + width + 208, height))  # Создаем экран
 clock = pygame.time.Clock()  # Создаем часы для FPS
@@ -39,6 +42,9 @@ for i in range(1, field_size - 1):  # случайная расстановка 
     walls.append([i, rnd])
     game_field[i][rnd] = "wall"
 """
+
+class Inventory:
+    items = []
 
 def game_field_update(p_name, x, y):  # обновление данных игрового поля
     global EtotHodit
@@ -77,7 +83,7 @@ while True:
         if event.type == pygame.QUIT:  # Сравниваем тип события с выходом из игры, окна
             pygame.quit()
             sys.exit(0)
-        if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1 and event.pos[0] < 420:
+        if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1 and event.pos[0] < 208:
             if event.pos[1] < inventoryPixelShift:
                 print("первый предмет выбран")
             elif event.pos[1] < inventoryPixelShift * 2:

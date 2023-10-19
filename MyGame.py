@@ -10,9 +10,13 @@ width = height = field_size * cell_size  # Ширина, высота экран
 FPS = 60  # Число кадров в секунду
 
 YaUzheHZCHtoPisat = 208
+inventory = {"wall": [32, 32, 20], "spawn": [1, 1, 1], "slow": [3, 3, 0], "shield": [1, 1, 1],
+             "heal": [2, 2, 0], "laser": [1, 1, 0]}
 
 EtotHodit = random.randint(0, 1)
 UpravlenieDlyaCHainikov = pygame.image.load("управление.png")
+inventoryImg = pygame.image.load("инвентарь_временный.png")
+inventoryPixelShift = 14
 print("EtotHodit = ", EtotHodit)
 sc = pygame.display.set_mode((YaUzheHZCHtoPisat + width + 208, height))  # Создаем экран
 clock = pygame.time.Clock()  # Создаем часы для FPS
@@ -62,7 +66,7 @@ def game_field_update(p_name, x, y):  # обновление данных игр
 def is_move_correct(x, y):  # проверка корректности хода
     if x < 0 or x >= field_size or y < 0 or y >= field_size:  # выход игрока за границы поля
         return False
-    if game_field[x][y] in ("wall", "player2", "player1"):  # столкновение игрока с запрещённым объектом
+    if game_field[x][y] in ("wall", "player2", "player1", "spawn", "shield"):  # столкновение игрока с запрещённым объектом
         return False
     return True
 
@@ -73,6 +77,20 @@ while True:
         if event.type == pygame.QUIT:  # Сравниваем тип события с выходом из игры, окна
             pygame.quit()
             sys.exit(0)
+        if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1 and event.pos[0] < 420:
+            if event.pos[1] < inventoryPixelShift:
+                print("первый предмет выбран")
+            elif event.pos[1] < inventoryPixelShift * 2:
+                print("второй предмет выбран")
+            elif event.pos[1] < inventoryPixelShift * 3:
+                print("третий предмет выбран")
+            elif event.pos[1] < inventoryPixelShift * 4:
+                print("четвёртый предмет выбран")
+            elif event.pos[1] < inventoryPixelShift * 5:
+                print("пятый предмет выбран")
+            elif event.pos[1] < inventoryPixelShift * 6:
+                print("шестой предмет выбран")
+
         if event.type == pygame.KEYDOWN:
             if event.key in [i[0] for i in player_controls.values()]:
                 player_name = "player1"
@@ -98,9 +116,9 @@ while True:
     sc.fill((0, 0, 0))
     for i in range(field_size):
         pygame.draw.line(sc, (72, 60, 50), ((i+1)*cell_size + YaUzheHZCHtoPisat, 0), ((i+1)*cell_size + YaUzheHZCHtoPisat, height))
-    for i in range(field_size):
-        pygame.draw.line(sc, (72, 60, 50), (YaUzheHZCHtoPisat, (i+1)*cell_size), (width+ YaUzheHZCHtoPisat, (i+1)*cell_size))
+        pygame.draw.line(sc, (72, 60, 50), (YaUzheHZCHtoPisat, (i+1)*cell_size), (width + YaUzheHZCHtoPisat, (i+1)*cell_size))
     sc.blit(UpravlenieDlyaCHainikov, (420 + YaUzheHZCHtoPisat, 0))
+    sc.blit(inventoryImg, (0, 0))
 
     pygame.draw.line(sc, (128, 128, 128), (width + YaUzheHZCHtoPisat, 0), (YaUzheHZCHtoPisat, width))
     for i in range(field_size):

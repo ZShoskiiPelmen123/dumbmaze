@@ -18,6 +18,7 @@ inventory = {"wall": [32, 32, 20], "spawn": [1, 1, 1], "slow": [3, 3, 0], "shiel
 EtotHodit = random.randint(0, 1)
 UpravlenieDlyaCHainikov = pygame.image.load("управление.png")
 inventoryImg = pygame.image.load("инвентарь_временный.png")
+shift = 14
 inventoryPixelShift = 14
 pervayaKnopkaCoord = [160, 19]
 print("EtotHodit = ", EtotHodit)
@@ -84,17 +85,22 @@ while True:
             pygame.quit()
             sys.exit(0)
         if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1 and event.pos[0] < 208:
-            if event.pos[1] < inventoryPixelShift:
+            if 3 < event.pos[1] < 14:
+                if 1 < event.pos[0] < 12:
+                    print("первый игрок")
+                elif 195 < event.pos[0] < 206:
+                    print("второй игрок")
+            elif event.pos[1] < inventoryPixelShift + shift:
                 print("первый предмет выбран")
-            elif event.pos[1] < inventoryPixelShift * 2:
+            elif event.pos[1] < shift + inventoryPixelShift * 2:
                 print("второй предмет выбран")
-            elif event.pos[1] < inventoryPixelShift * 3:
+            elif event.pos[1] < shift + inventoryPixelShift * 3:
                 print("третий предмет выбран")
-            elif event.pos[1] < inventoryPixelShift * 4:
+            elif event.pos[1] < shift + inventoryPixelShift * 4:
                 print("четвёртый предмет выбран")
-            elif event.pos[1] < inventoryPixelShift * 5:
+            elif event.pos[1] < shift + inventoryPixelShift * 5:
                 print("пятый предмет выбран")
-            elif event.pos[1] < inventoryPixelShift * 6:
+            elif event.pos[1] < shift + inventoryPixelShift * 6:
                 print("шестой предмет выбран")
 
         if event.type == pygame.KEYDOWN:

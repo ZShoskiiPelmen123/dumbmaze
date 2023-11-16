@@ -1,5 +1,6 @@
 import random
 import pygame
+import numpy
 import sys
 
 pygame.init()
@@ -13,15 +14,17 @@ YaUzheHZCHtoPisat = 208
 inventory = {"wall": [32, 32, 20], "spawn": [1, 1, 1], "slow": [3, 3, 0], "shield": [1, 1, 1],
              "heal": [2, 2, 0], "laser": [1, 1, 0]}
 
-
-
-EtotHodit = random.randint(0, 1)
+EtotHodit = playerBuilder = random.randint(0, 1)
 UpravlenieDlyaCHainikov = pygame.image.load("управление.png")
 inventoryImg = pygame.image.load("инвентарь_временный.png")
 shift = 14
 inventoryPixelShift = 14
 pervayaKnopkaCoord = [160, 19]
-print("EtotHodit = ", EtotHodit)
+isBuildingCorrect = 0
+buildings = []
+indexes_diagonal_cells = []
+currentCursorCell = [0, 0] # текущая клетка поля под курсором
+print("EtotHodit = ", "красный" if EtotHodit == 0 else "зелёный")
 sc = pygame.display.set_mode((YaUzheHZCHtoPisat + width + 208, height))  # Создаем экран
 clock = pygame.time.Clock()  # Создаем часы для FPS
 square = pygame.Rect(0, 0, cell_size, cell_size)
@@ -32,6 +35,7 @@ players = [[0, 0], [field_size - 1, field_size - 1]]  # координаты и�
 game_field[players[0][0]][players[0][1]] = "player1"  # расположить игрока_1 на поле
 game_field[players[1][0]][players[1][1]] = "player2"  # расположить игрока_2 на поле
 walls = []  # список стен
+square_color = (255, 255, 255)
 player_controls = {"up": [pygame.K_w, pygame.K_u, "W", "U"], "down": [pygame.K_s, pygame.K_j, "S", "J"],
                    "right": [pygame.K_d, pygame.K_k, "D", "K"], "left": [pygame.K_a, pygame.K_h, "A", "H"],
                    "up_left": [pygame.K_q, pygame.K_y, "Q", "Y"], "up_right": [pygame.K_e,  pygame.K_i, "E", "I"],
@@ -69,6 +73,11 @@ def game_field_update(p_name, x, y):  # обновление данных игр
     players[p_num] = [x, y]
     game_field[x][y] = p_name
 
+def fill_indexes_diagonal_cells():
+    global indexes_diagonal_cells
+    indexes_diagonal_cells.clear()
+    for i in range(field_size):
+        indexes_diagonal_cells.append([i, field_size - 1 - i])
 
 def is_move_correct(x, y):  # проверка корректности хода
     if x < 0 or x >= field_size or y < 0 or y >= field_size:  # выход игрока за границы поля
@@ -77,6 +86,32 @@ def is_move_correct(x, y):  # проверка корректности хода
         return False
     return True
 
+def calc_current_cursor_cell(x, y):
+    global currentCursorCell
+    currentCursorCell = [int((x - 208) / cell_size), int(y / cell_size)]
+
+def draw_rect_current_cursor_cell():
+    square.x = currentCursorCell[0] * cell_size + YaUzheHZCHtoPisat
+    square.y = currentCursorCell[1] * cell_size
+    if currentCursorCell in indexes_diagonal_cells:
+        pygame.draw.rect(sc, square_color, square)
+    else:
+        pygame.draw.rect(sc, square_color, square)
+
+
+def set_drawing_color():
+    global square_color
+    if currentCursorCell in indexes_diagonal_cells:
+        square_color = (255, 128, 0)
+    elif currentCursorCell[1] < indexes_diagonal_cells[currentCursorCell[0]][1] and playerBuilder == 0:  # часть поля первого игрока
+        square_color = (0, 255, 0)
+    elif currentCursorCell[1] > indexes_diagonal_cells[currentCursorCell[0]][1] and playerBuilder == 1:  # часть поля второго игрока
+        square_color = (0, 255, 0)
+    else:
+        square_color = (255, 0, 0)
+
+
+fill_indexes_diagonal_cells()
 
 while True:
     events = pygame.event.get()  # Получаем события в прямом эфире
@@ -86,23 +121,31 @@ while True:
             sys.exit(0)
         if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1 and event.pos[0] < 208:
             if 3 < event.pos[1] < 14:
-                if 1 < event.pos[0] < 12:
-                    print("первый игрок")
-                elif 195 < event.pos[0] < 206:
-                    print("второй игрок")
-            elif event.pos[1] < inventoryPixelShift + shift:
-                print("первый предмет выбран")
-            elif event.pos[1] < shift + inventoryPixelShift * 2:
-                print("второй предмет выбран")
-            elif event.pos[1] < shift + inventoryPixelShift * 3:
-                print("третий предмет выбран")
-            elif event.pos[1] < shift + inventoryPixelShift * 4:
-                print("четвёртый предмет выбран")
-            elif event.pos[1] < shift + inventoryPixelShift * 5:
-                print("пятый предмет выбран")
-            elif event.pos[1] < shift + inventoryPixelShift * 6:
-                print("шестой предмет выбран")
-
+                if 1 < event.pos[0] < 12 and playerBuilder == 1:
+                    print("красный игрок строит")
+                    playerBuilder = 0
+                elif 195 < event.pos[0] < 206 and playerBuilder == 0:
+                    print("зелёный игрок строит")
+                    playerBuilder = 1
+            elif 158 < event.pos[0] < 206:
+                if event.pos[1] < inventoryPixelShift + shift:
+                    print("первый предмет выбран")
+                elif event.pos[1] < shift + inventoryPixelShift * 2:
+                    print("второй предмет выбран")
+                elif event.pos[1] < shift + inventoryPixelShift * 3:
+                    print("третий предмет выбран")
+                # elif event.pos[1] < shift + inventoryPixelShift * 5:  # 67 < x < 79
+                elif 67 < event.pos[1] < 79:
+                    print("четвёртый предмет выбран")
+            elif event.pos[0] < field_size * cell_size:
+                if isBuildingCorrect == 1:
+                    buildings.append(currentCursorCell)
+        if event.type == pygame.MOUSEMOTION and 208 < event.pos[0] < 208 + width:
+            # print(str(event.pos[0]) + " " + str(event.pos[1]))
+            old_cell = currentCursorCell
+            calc_current_cursor_cell(event.pos[0], event.pos[1])
+            if old_cell != currentCursorCell:
+                set_drawing_color()
         if event.type == pygame.KEYDOWN:
             if event.key in [i[0] for i in player_controls.values()]:
                 player_name = "player1"
@@ -131,7 +174,7 @@ while True:
         pygame.draw.line(sc, (72, 60, 50), (YaUzheHZCHtoPisat, (i+1)*cell_size), (width + YaUzheHZCHtoPisat, (i+1)*cell_size))
     sc.blit(UpravlenieDlyaCHainikov, (420 + YaUzheHZCHtoPisat, 0))
     sc.blit(inventoryImg, (0, 0))
-
+    draw_rect_current_cursor_cell()
     pygame.draw.line(sc, (128, 128, 128), (width + YaUzheHZCHtoPisat, 0), (YaUzheHZCHtoPisat, width))
     for i in range(field_size):
         for j in range(field_size):

@@ -18,9 +18,11 @@ EtotHodit = playerBuilder = random.randint(0, 1)
 UpravlenieDlyaCHainikov = pygame.image.load("управление.png")
 inventoryImg = pygame.image.load("инвентарь_временный.png")
 shift = 14
+itemChosen = 0
 inventoryPixelShift = 14
 pervayaKnopkaCoord = [160, 19]
 isBuildingCorrect = 0
+leftUpperSquare2x2 = [0, 0]
 buildings = []
 indexes_diagonal_cells = []
 currentCursorCell = [0, 0] # текущая клетка поля под курсором
@@ -98,8 +100,17 @@ def draw_rect_current_cursor_cell():
     else:
         pygame.draw.rect(sc, square_color, square)
 
+def draw_rect_2x2_current_cursor_cell():
+    square.x = currentCursorCell[0] * cell_size + YaUzheHZCHtoPisat
+    square.y = currentCursorCell[1] * cell_size
+    # if currentCursorCell in indexes_diagonal_cells:
+    square_2x2 = pygame.Rect(square.x, square.y, cell_size * 2, cell_size * 2)
+    pygame.draw.rect(sc, square_color, square_2x2)
+    # else:
+    #    pygame.draw.rect(sc, square_color, square)
 
 def set_drawing_color():
+    global itemChosen
     global square_color
     if currentCursorCell in indexes_diagonal_cells:
         square_color = (255, 128, 0)
@@ -129,23 +140,33 @@ while True:
                     playerBuilder = 1
             elif 158 < event.pos[0] < 206:
                 if event.pos[1] < inventoryPixelShift + shift:
+                    # square_color = (0, 0, 0)
+                    itemChosen = 1
                     print("первый предмет выбран")
                 elif event.pos[1] < shift + inventoryPixelShift * 2:
+                    itemChosen = 2
                     print("второй предмет выбран")
                 elif event.pos[1] < shift + inventoryPixelShift * 3:
+                    itemChosen = 3
                     print("третий предмет выбран")
                 # elif event.pos[1] < shift + inventoryPixelShift * 5:  # 67 < x < 79
                 elif 67 < event.pos[1] < 79:
+                    itemChosen = 4
                     print("четвёртый предмет выбран")
             elif event.pos[0] < field_size * cell_size:
                 if isBuildingCorrect == 1:
                     buildings.append(currentCursorCell)
         if event.type == pygame.MOUSEMOTION and 208 < event.pos[0] < 208 + width:
             # print(str(event.pos[0]) + " " + str(event.pos[1]))
-            old_cell = currentCursorCell
-            calc_current_cursor_cell(event.pos[0], event.pos[1])
-            if old_cell != currentCursorCell:
-                set_drawing_color()
+            if itemChosen != 4:
+                old_cell = currentCursorCell
+                calc_current_cursor_cell(event.pos[0], event.pos[1])
+                if old_cell != currentCursorCell:
+                    set_drawing_color()
+            elif itemChosen == 4:
+                if leftUpperSquare2x2 == (0, 0):
+                    calc_current_cursor_cell(event.pos[0], event.pos[1])
+                    leftUpperSquare2x2 = currentCursorCell
         if event.type == pygame.KEYDOWN:
             if event.key in [i[0] for i in player_controls.values()]:
                 player_name = "player1"
@@ -174,7 +195,10 @@ while True:
         pygame.draw.line(sc, (72, 60, 50), (YaUzheHZCHtoPisat, (i+1)*cell_size), (width + YaUzheHZCHtoPisat, (i+1)*cell_size))
     sc.blit(UpravlenieDlyaCHainikov, (420 + YaUzheHZCHtoPisat, 0))
     sc.blit(inventoryImg, (0, 0))
-    draw_rect_current_cursor_cell()
+    if itemChosen != 4:
+        draw_rect_current_cursor_cell()
+    elif itemChosen == 4:
+        draw_rect_2x2_current_cursor_cell()
     pygame.draw.line(sc, (128, 128, 128), (width + YaUzheHZCHtoPisat, 0), (YaUzheHZCHtoPisat, width))
     for i in range(field_size):
         for j in range(field_size):

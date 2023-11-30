@@ -155,32 +155,35 @@ while True:
         if event.type == pygame.QUIT:  # Сравниваем тип события с выходом из игры, окна
             pygame.quit()
             sys.exit(0)
-        if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1 and event.pos[0] < 208:
-            if 3 < event.pos[1] < 14:
-                if 1 < event.pos[0] < 12 and playerBuilder == 1:
-                    print("красный игрок строит")
-                    playerBuilder = 0
-                elif 195 < event.pos[0] < 206 and playerBuilder == 0:
-                    print("зелёный игрок строит")
-                    playerBuilder = 1
-            elif 158 < event.pos[0] < 206:
-                if event.pos[1] < inventoryPixelShift + shift:
-                    # square_color = (0, 0, 0)
-                    itemChosen = 1
-                    print("первый предмет выбран")
-                elif event.pos[1] < shift + inventoryPixelShift * 2:
-                    itemChosen = 2
-                    print("второй предмет выбран")
-                elif event.pos[1] < shift + inventoryPixelShift * 3:
-                    itemChosen = 3
-                    print("третий предмет выбран")
-                # elif event.pos[1] < shift + inventoryPixelShift * 5:  # 67 < x < 79
-                elif 67 < event.pos[1] < 79:
-                    itemChosen = 4
-                    print("четвёртый предмет выбран")
-            elif event.pos[0] < field_size * cell_size:
-                if isBuildingCorrect == 1:
-                    buildings.append(currentCursorCell)
+        if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+            if event.pos[0] < 208:
+                if 3 < event.pos[1] < 14:
+                    if 1 < event.pos[0] < 12 and playerBuilder == 1:
+                        print("красный игрок строит")
+                        playerBuilder = 0
+                    elif 195 < event.pos[0] < 206 and playerBuilder == 0:
+                        print("зелёный игрок строит")
+                        playerBuilder = 1
+                elif 158 < event.pos[0] < 206:
+                    if event.pos[1] < inventoryPixelShift + shift:
+                        # square_color = (0, 0, 0)
+                        itemChosen = 1
+                        print("первый предмет выбран")
+                    elif event.pos[1] < shift + inventoryPixelShift * 2:
+                        itemChosen = 2
+                        print("второй предмет выбран")
+                    elif event.pos[1] < shift + inventoryPixelShift * 3:
+                        itemChosen = 3
+                        print("третий предмет выбран")
+                    # elif event.pos[1] < shift + inventoryPixelShift * 5:  # 67 < x < 79
+                    elif 67 < event.pos[1] < 79:
+                        itemChosen = 4
+                        print("четвёртый предмет выбран")
+                elif event.pos[0] < field_size * cell_size:
+                    if isBuildingCorrect == 1:
+                        buildings.append(currentCursorCell)
+            elif event.pos < 208 + width:
+                walls.append()
         if event.type == pygame.MOUSEMOTION:
             if 208 < event.pos[0] < 208 + width:
                 # print(str(event.pos[0]) + " " + str(event.pos[1]))

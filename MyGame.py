@@ -192,10 +192,25 @@ while True:
                 elif itemChosen == 4:
                     if leftUpperSquare2x2 == (0, 0):
                         calc_current_cursor_cell(event.pos[0], event.pos[1])
-                        leftUpperSquare2x2 = currentCursorCell
+                        if currentCursorCell[0] != field_size - 1 and \
+                                currentCursorCell[1] != field_size - 1:
+                            leftUpperSquare2x2 = currentCursorCell
+                        elif currentCursorCell[1] == field_size - 1:
+                            leftUpperSquare2x2 = currentCursorCell
+                            leftUpperSquare2x2[1] -= 1
+                        elif currentCursorCell[0] == field_size - 1:
+                            leftUpperSquare2x2 = currentCursorCell
+                            leftUpperSquare2x2[0] -= 1
                     else:
+                        # print(1, leftUpperSquare2x2)
                         calc_current_cursor_cell(event.pos[0], event.pos[1])
-                        if currentCursorCell[0] == leftUpperSquare2x2[0] + 1 and\
+                        if currentCursorCell[1] == field_size - 1:
+                            leftUpperSquare2x2 = currentCursorCell
+                            leftUpperSquare2x2[1] -= 1
+                        if currentCursorCell[0] == field_size - 1:
+                            leftUpperSquare2x2 = currentCursorCell
+                            leftUpperSquare2x2[0] -= 1
+                        elif currentCursorCell[0] == leftUpperSquare2x2[0] + 1 and\
                                 currentCursorCell[1] == leftUpperSquare2x2[1] - 1:
                             leftUpperSquare2x2[1] -= 1
                         elif currentCursorCell[0] == leftUpperSquare2x2[0] - 1 and \
@@ -211,8 +226,11 @@ while True:
                         elif currentCursorCell[0] > leftUpperSquare2x2[0] + 2\
                                 or currentCursorCell[1] == leftUpperSquare2x2[1] + 2:
                             leftUpperSquare2x2 = currentCursorCell
-            else:
-                leftUpperSquare2x2 = (0, 0)
+                        else:
+                            leftUpperSquare2x2 = currentCursorCell
+                        # print(2, leftUpperSquare2x2)
+            # else:
+            #     leftUpperSquare2x2 = (0, 0)
         if event.type == pygame.KEYDOWN:
             if event.key in [i[0] for i in player_controls.values()]:
                 player_name = "player1"

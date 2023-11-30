@@ -25,6 +25,7 @@ isBuildingCorrect = 0
 leftUpperSquare2x2 = [0, 0]
 buildings = []
 indexes_diagonal_cells = []
+indexes_diagonal_cells_2x2 = []
 currentCursorCell = [0, 0] # текущая клетка поля под курсором
 print("EtotHodit = ", "красный" if EtotHodit == 0 else "зелёный")
 sc = pygame.display.set_mode((YaUzheHZCHtoPisat + width + 208, height))  # Создаем экран
@@ -76,11 +77,19 @@ def game_field_update(p_name, x, y):  # обновление данных игр
     game_field[x][y] = p_name
 
 def fill_indexes_diagonal_cells():
-    global indexes_diagonal_cells
+    global indexes_diagonal_cells, indexes_diagonal_cells_2x2
     indexes_diagonal_cells.clear()
+    indexes_diagonal_cells_2x2.clear()
     for i in range(field_size):
         indexes_diagonal_cells.append([i, field_size - 1 - i])
-
+        indexes_diagonal_cells_2x2.append([i, field_size - 1 - i])
+        if 0 < i < field_size - 1:
+            indexes_diagonal_cells_2x2.append([i, field_size - 2 - i])
+            indexes_diagonal_cells_2x2.append([i, field_size - i])
+        elif i == 0:
+            indexes_diagonal_cells_2x2.append([i, field_size - 2 - i])
+        elif i == field_size - 1:
+            indexes_diagonal_cells_2x2.append([i, field_size - i])
 def is_move_correct(x, y):  # проверка корректности хода
     if x < 0 or x >= field_size or y < 0 or y >= field_size:  # выход игрока за границы поля
         return False
@@ -101,8 +110,8 @@ def draw_rect_current_cursor_cell():
         pygame.draw.rect(sc, square_color, square)
 
 def draw_rect_2x2_current_cursor_cell():
-    square.x = currentCursorCell[0] * cell_size + YaUzheHZCHtoPisat
-    square.y = currentCursorCell[1] * cell_size
+    square.x = leftUpperSquare2x2[0] * cell_size + YaUzheHZCHtoPisat
+    square.y = leftUpperSquare2x2[1] * cell_size
     # if currentCursorCell in indexes_diagonal_cells:
     square_2x2 = pygame.Rect(square.x, square.y, cell_size * 2, cell_size * 2)
     pygame.draw.rect(sc, square_color, square_2x2)
@@ -117,6 +126,22 @@ def set_drawing_color():
     elif currentCursorCell[1] < indexes_diagonal_cells[currentCursorCell[0]][1] and playerBuilder == 0:  # часть поля первого игрока
         square_color = (0, 255, 0)
     elif currentCursorCell[1] > indexes_diagonal_cells[currentCursorCell[0]][1] and playerBuilder == 1:  # часть поля второго игрока
+        square_color = (0, 255, 0)
+    else:
+        square_color = (255, 0, 0)
+
+
+def set_drawing_color_2x2():
+    global itemChosen
+    global square_color
+    if [leftUpperSquare2x2[0] + 1, leftUpperSquare2x2[1] + 1] in indexes_diagonal_cells and playerBuilder == 0 or \
+            [leftUpperSquare2x2[0], leftUpperSquare2x2[1]] in indexes_diagonal_cells and playerBuilder == 1:
+        square_color = (255, 128, 0)
+    elif [leftUpperSquare2x2[0] + 1, leftUpperSquare2x2[1]] in indexes_diagonal_cells:
+        square_color = (255, 0, 0)
+    elif leftUpperSquare2x2[1] + 1 < indexes_diagonal_cells[leftUpperSquare2x2[0]][1] and playerBuilder == 0:  # часть поля первого игрока
+        square_color = (0, 255, 0)
+    elif leftUpperSquare2x2[1] + 1 > indexes_diagonal_cells[leftUpperSquare2x2[0]][1] and playerBuilder == 1:  # часть поля второго игрока
         square_color = (0, 255, 0)
     else:
         square_color = (255, 0, 0)
@@ -156,17 +181,38 @@ while True:
             elif event.pos[0] < field_size * cell_size:
                 if isBuildingCorrect == 1:
                     buildings.append(currentCursorCell)
-        if event.type == pygame.MOUSEMOTION and 208 < event.pos[0] < 208 + width:
-            # print(str(event.pos[0]) + " " + str(event.pos[1]))
-            if itemChosen != 4:
-                old_cell = currentCursorCell
-                calc_current_cursor_cell(event.pos[0], event.pos[1])
-                if old_cell != currentCursorCell:
-                    set_drawing_color()
-            elif itemChosen == 4:
-                if leftUpperSquare2x2 == (0, 0):
+        if event.type == pygame.MOUSEMOTION:
+            if 208 < event.pos[0] < 208 + width:
+                # print(str(event.pos[0]) + " " + str(event.pos[1]))
+                if itemChosen != 4:
+                    old_cell = currentCursorCell
                     calc_current_cursor_cell(event.pos[0], event.pos[1])
-                    leftUpperSquare2x2 = currentCursorCell
+                    if old_cell != currentCursorCell:
+                        set_drawing_color()
+                elif itemChosen == 4:
+                    if leftUpperSquare2x2 == (0, 0):
+                        calc_current_cursor_cell(event.pos[0], event.pos[1])
+                        leftUpperSquare2x2 = currentCursorCell
+                    else:
+                        calc_current_cursor_cell(event.pos[0], event.pos[1])
+                        if currentCursorCell[0] == leftUpperSquare2x2[0] + 1 and\
+                                currentCursorCell[1] == leftUpperSquare2x2[1] - 1:
+                            leftUpperSquare2x2[1] -= 1
+                        elif currentCursorCell[0] == leftUpperSquare2x2[0] - 1 and \
+                                currentCursorCell[1] == leftUpperSquare2x2[1] + 1:
+                            leftUpperSquare2x2[0] -= 1
+                        elif currentCursorCell[0] == leftUpperSquare2x2[0] + 2:
+                            leftUpperSquare2x2[0] += 1
+                        elif currentCursorCell[1] == leftUpperSquare2x2[1] + 2:
+                            leftUpperSquare2x2[1] += 1
+                        elif currentCursorCell[0] < leftUpperSquare2x2[0]\
+                                or currentCursorCell[1] < leftUpperSquare2x2[1]:
+                            leftUpperSquare2x2 = currentCursorCell
+                        elif currentCursorCell[0] > leftUpperSquare2x2[0] + 2\
+                                or currentCursorCell[1] == leftUpperSquare2x2[1] + 2:
+                            leftUpperSquare2x2 = currentCursorCell
+            else:
+                leftUpperSquare2x2 = (0, 0)
         if event.type == pygame.KEYDOWN:
             if event.key in [i[0] for i in player_controls.values()]:
                 player_name = "player1"
@@ -197,7 +243,8 @@ while True:
     sc.blit(inventoryImg, (0, 0))
     if itemChosen != 4:
         draw_rect_current_cursor_cell()
-    elif itemChosen == 4:
+    elif itemChosen == 4 and leftUpperSquare2x2 != (0, 0):
+        set_drawing_color_2x2()
         draw_rect_2x2_current_cursor_cell()
     pygame.draw.line(sc, (128, 128, 128), (width + YaUzheHZCHtoPisat, 0), (YaUzheHZCHtoPisat, width))
     for i in range(field_size):

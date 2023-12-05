@@ -15,8 +15,8 @@ inventory = {"wall": [32, 32, 20], "spawn": [1, 1, 1], "slow": [3, 3, 0], "shiel
              "heal": [2, 2, 0], "laser": [1, 1, 0]}
 
 EtotHodit = playerBuilder = random.randint(0, 1)
-UpravlenieDlyaCHainikov = pygame.image.load("управление.png")
-inventoryImg = pygame.image.load("инвентарь_временный.png")
+UpravlenieDlyaCHainikov = pygame.image.load("img/управление.png")
+inventoryImg = pygame.image.load("img/инвентарь.png")
 shift = 14
 itemChosen = 0
 inventoryPixelShift = 14

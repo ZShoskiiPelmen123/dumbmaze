@@ -31,7 +31,7 @@ sc = pygame.display.set_mode((inventoryPngWidth + width + 208, height))  # Со�
 clock = pygame.time.Clock()  # Создаем часы для FPS
 square = pygame.Rect(0, 0, cell_size, cell_size)
 
-game_field = [['0']*field_size for i in range(field_size)]  # игровое поле
+game_field = [['0'] * field_size for i in range(field_size)]  # игровое поле
 players = [[0, 0], [field_size - 1, field_size - 1]]  # координаты игроков на поле
 
 game_field[players[0][0]][players[0][1]] = "player1"  # расположить игрока_1 на поле
@@ -40,7 +40,7 @@ walls = []  # список стен
 square_color = (255, 255, 255)
 player_controls = {"up": [pygame.K_w, pygame.K_u, "W", "U"], "down": [pygame.K_s, pygame.K_j, "S", "J"],
                    "right": [pygame.K_d, pygame.K_k, "D", "K"], "left": [pygame.K_a, pygame.K_h, "A", "H"],
-                   "up_left": [pygame.K_q, pygame.K_y, "Q", "Y"], "up_right": [pygame.K_e,  pygame.K_i, "E", "I"],
+                   "up_left": [pygame.K_q, pygame.K_y, "Q", "Y"], "up_right": [pygame.K_e, pygame.K_i, "E", "I"],
                    "down_right": [pygame.K_c, pygame.K_m, "C", "M"], "down_left": [pygame.K_z, pygame.K_b, "Z", "B"]}
 
 """
@@ -64,7 +64,7 @@ def game_field_update(p_name, x, y):  # обновление данных игр
         p_num = 0
     else:
         p_num = 1
-    x, y = players[p_num][0]+x, players[p_num][1]+y  # вычисление новых координат игрока
+    x, y = players[p_num][0] + x, players[p_num][1] + y  # вычисление новых координат игрока
     if not is_move_correct(x, y):
         return
     if p_name == "player1":
@@ -203,6 +203,7 @@ while True:
                 if itemChosen != 4:
                     old_cell = currentCursorCell
                     calc_current_cursor_cell(event.pos[0], event.pos[1])
+                    leftUpperSquare2x2 = currentCursorCell
                     if old_cell != currentCursorCell:
                         set_drawing_color()
                 elif itemChosen == 4:
@@ -226,27 +227,30 @@ while True:
                         if currentCursorCell[0] == field_size - 1:
                             leftUpperSquare2x2 = currentCursorCell
                             leftUpperSquare2x2[0] -= 1
-                        elif currentCursorCell[0] == leftUpperSquare2x2[0] + 1 and\
-                                currentCursorCell[1] == leftUpperSquare2x2[1] - 1:
+                        elif (currentCursorCell[0] == leftUpperSquare2x2[0] + 1 and
+                              currentCursorCell[1] == leftUpperSquare2x2[1] - 1):
                             leftUpperSquare2x2[1] -= 1
-                        elif currentCursorCell[0] == leftUpperSquare2x2[0] - 1 and \
-                                currentCursorCell[1] == leftUpperSquare2x2[1] + 1:
+                        elif (currentCursorCell[0] == leftUpperSquare2x2[0] - 1 and
+                              currentCursorCell[1] == leftUpperSquare2x2[1] + 1):
                             leftUpperSquare2x2[0] -= 1
                         elif currentCursorCell[0] == leftUpperSquare2x2[0] + 2:
                             leftUpperSquare2x2[0] += 1
                         elif currentCursorCell[1] == leftUpperSquare2x2[1] + 2:
                             leftUpperSquare2x2[1] += 1
-                        elif currentCursorCell[0] < leftUpperSquare2x2[0]\
-                                or currentCursorCell[1] < leftUpperSquare2x2[1]:
+                        elif (currentCursorCell[0] < leftUpperSquare2x2[0] or
+                              currentCursorCell[1] < leftUpperSquare2x2[1]):
                             leftUpperSquare2x2 = currentCursorCell
-                        elif currentCursorCell[0] > leftUpperSquare2x2[0] + 2\
+                        elif currentCursorCell[0] > leftUpperSquare2x2[0] + 2 \
                                 or currentCursorCell[1] == leftUpperSquare2x2[1] + 2:
                             leftUpperSquare2x2 = currentCursorCell
-                        else:
+                        # если не одна из четырёх клеток квадрата 2x2
+                        elif not (currentCursorCell[0] in (leftUpperSquare2x2[0], leftUpperSquare2x2[0] + 1) and
+                                  (currentCursorCell[1] in (leftUpperSquare2x2[1], leftUpperSquare2x2[1] + 1))):
                             leftUpperSquare2x2 = currentCursorCell
                         # print(2, leftUpperSquare2x2)
             # else:
             #     leftUpperSquare2x2 = (0, 0)
+        # управление игроками с клавиатуры
         if event.type == pygame.KEYDOWN:
             if event.key in [i[0] for i in player_controls.values()]:
                 player_name = "player1"
@@ -271,8 +275,10 @@ while True:
 
     sc.fill((0, 0, 0))
     for i in range(field_size):
-        pygame.draw.line(sc, (72, 60, 50), ((i+1) * cell_size + inventoryPngWidth, 0), ((i + 1) * cell_size + inventoryPngWidth, height))
-        pygame.draw.line(sc, (72, 60, 50), (inventoryPngWidth, (i + 1) * cell_size), (width + inventoryPngWidth, (i + 1) * cell_size))
+        pygame.draw.line(sc, (72, 60, 50), ((i + 1) * cell_size + inventoryPngWidth, 0),
+                         ((i + 1) * cell_size + inventoryPngWidth, height))
+        pygame.draw.line(sc, (72, 60, 50), (inventoryPngWidth, (i + 1) * cell_size),
+                         (width + inventoryPngWidth, (i + 1) * cell_size))
     sc.blit(controlsPng, (420 + inventoryPngWidth, 0))
     sc.blit(inventoryImg, (0, 0))
     if itemChosen != 4:

@@ -96,7 +96,8 @@ def is_move_correct(x, y):  # проверка корректности хода
     if x < 0 or x >= field_size or y < 0 or y >= field_size:  # выход игрока за границы поля
         return False
     # столкновение игрока с запрещённым объектом
-    if game_field[x][y] in inventory.keys() | ["player1", "player2"]:
+    if (game_field[x][y] not in ["slow"] and
+            game_field[x][y] in inventory.keys() | ["player1", "player2"]):
         return False
     return True
 

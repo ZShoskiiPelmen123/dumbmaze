@@ -22,8 +22,8 @@ itemChosen = 1  # выбранный для расстановки предме�
 inventoryPixelShift = 14
 firstButtonCoord = [160, 19]
 isBuildingCorrect = 0
-leftUpperSquare2x2 = [0, 0]
-leftUpperSquare2x2Cells = []
+leftUpperSquare2x2 = [0, 0]  # координаты верхнего левого угла квадрата 2x2
+square2x2AllCells = []  # координаты всех клеток квадрата 2x2
 buildings = []
 indexes_diagonal_cells = []  # индексы диагональных элементов
 currentCursorCell = [0, 0]  # текущая клетка поля под курсором
@@ -77,12 +77,12 @@ def game_field_update(p_name, x, y):  # обновление данных игр
     game_field[x][y] = p_name
 
 
-def fill_2x2Cells(left_upper_coord):  # координаты клеток квадрата 2x2
-    leftUpperSquare2x2Cells.clear()
-    leftUpperSquare2x2Cells.append(left_upper_coord)
-    leftUpperSquare2x2Cells.append([left_upper_coord[0], left_upper_coord[1] + 1])
-    leftUpperSquare2x2Cells.append([left_upper_coord[0] + 1, left_upper_coord[1]])
-    leftUpperSquare2x2Cells.append([left_upper_coord[0] + 1, left_upper_coord[1] + 1])
+def fill_2x2_cells(left_upper_coord):  # заполнить координаты клеток квадрата 2x2
+    square2x2AllCells.clear()
+    square2x2AllCells.append(left_upper_coord)
+    square2x2AllCells.append([left_upper_coord[0], left_upper_coord[1] + 1])
+    square2x2AllCells.append([left_upper_coord[0] + 1, left_upper_coord[1]])
+    square2x2AllCells.append([left_upper_coord[0] + 1, left_upper_coord[1] + 1])
 
 
 def fill_indexes_diagonal_cells():  # заполнить индексы диагональных элементов
@@ -101,11 +101,11 @@ def is_move_correct(x, y):  # проверка корректности хода
     return True
 
 
-def is_building_correct(player_num, item_num):
+def is_building_correct(player_num, item_num):  # проверка корректности размещения объекта на поле
     obj_cells = [currentCursorCell]
     if item_num == 4:
-        fill_2x2Cells(leftUpperSquare2x2)
-        obj_cells = leftUpperSquare2x2Cells
+        fill_2x2_cells(leftUpperSquare2x2)
+        obj_cells = square2x2AllCells
     for obj_cell in obj_cells:
         if game_field[obj_cell[0]][obj_cell[1]] in inventory.keys() | ["player1", "player2"]:
             return False
@@ -172,6 +172,7 @@ while True:
             pygame.quit()
             sys.exit(0)
         if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+            # 1-ая часть ширины экрана - до конца инвентаря
             if event.pos[0] < inventoryPngWidth:
                 if 3 < event.pos[1] < 14:
                     if 12 > event.pos[0] > 1 == playerBuilder:
@@ -193,24 +194,25 @@ while True:
                     elif 67 < event.pos[1] < 79:
                         itemChosen = 4
                         print("четвёртый предмет выбран")
+            # 2-ая часть ширины экрана - до конца игрового поля
             elif event.pos[0] < field_size * cell_size + inventoryPngWidth:
                 if itemChosen != 0 and is_building_correct(playerBuilder, itemChosen):
                     if itemChosen == 4:
-                        for cellCoord2x2 in leftUpperSquare2x2Cells:
+                        for cellCoord2x2 in square2x2AllCells:
                             game_field[cellCoord2x2[0]][cellCoord2x2[1]] = list(inventory.keys())[itemChosen - 1]
                     else:
                         game_field[currentCursorCell[0]][currentCursorCell[1]] = list(inventory.keys())[itemChosen - 1]
-        if event.type == pygame.MOUSEMOTION:  # FIXME: при зажатой кнопке мыши, 2x2 можно уводить за границы
-            if inventoryPngWidth < event.pos[0] < inventoryPngWidth + width:
+        if event.type == pygame.MOUSEMOTION:
+            if inventoryPngWidth < event.pos[0] < inventoryPngWidth + width and 0 < event.pos[1] < height:
                 if itemChosen != 4:
                     old_cell = currentCursorCell
                     calc_current_cursor_cell(event.pos[0], event.pos[1])
                     leftUpperSquare2x2 = currentCursorCell
                     if old_cell != currentCursorCell:
                         set_drawing_color()
-                # блок вычисления координат квадрата 2x2 для отображения на поле при расстановке объектов
+                # блок вычисления координат верхнего левого угла квадрата 2x2
+                # для отображения на поле при расстановке объектов
                 elif itemChosen == 4:
-                    old_cell = leftUpperSquare2x2
                     if leftUpperSquare2x2 == (0, 0):
                         calc_current_cursor_cell(event.pos[0], event.pos[1])
                         if (currentCursorCell[0] != field_size - 1 and
@@ -239,7 +241,8 @@ while True:
                         elif currentCursorCell[1] == leftUpperSquare2x2[1] + 2:
                             leftUpperSquare2x2[1] += 1
                         # курсор ни в одной из клеток нарисованного квадрата
-                        elif not (currentCursorCell in leftUpperSquare2x2Cells):
+                        elif not (currentCursorCell[0] in (leftUpperSquare2x2[0], leftUpperSquare2x2[0] + 1) and
+                                  (currentCursorCell[1] in (leftUpperSquare2x2[1], leftUpperSquare2x2[1] + 1))):
                             # курсор в нижнем правом углу
                             if currentCursorCell[0] == currentCursorCell[1] == field_size - 1:
                                 leftUpperSquare2x2 = currentCursorCell
@@ -255,8 +258,6 @@ while True:
                                 leftUpperSquare2x2[1] -= 1
                             else:
                                 leftUpperSquare2x2 = currentCursorCell
-                    if old_cell != leftUpperSquare2x2:
-                        set_drawing_color_2x2()
         # управление игроками с клавиатуры
         if event.type == pygame.KEYDOWN:
             if event.key in [i[0] for i in player_controls.values()]:
@@ -293,6 +294,7 @@ while True:
     if itemChosen != 4:
         draw_rect_current_cursor_cell()
     elif itemChosen == 4 and leftUpperSquare2x2 != (0, 0):
+        set_drawing_color_2x2()
         draw_rect_2x2_current_cursor_cell()
     # прорисовка диагональной линии
     pygame.draw.line(sc, (128, 128, 128), (width + inventoryPngWidth, 0), (inventoryPngWidth, width))

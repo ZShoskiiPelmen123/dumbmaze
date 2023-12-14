@@ -8,9 +8,9 @@ field_size = 14  # количество клеток поля
 cell_size = 30  # ширина одной клетки в пикселях
 width = height = field_size * cell_size  # Ширина, высота экрана
 FPS = 60  # Число кадров в секунду
-
-inventory = {"wall": [32, 32, 20], "spawn": [1, 1, 1], "slow": [3, 3, 0], "shield": [1, 1, 1],
-             "heal": [2, 2, 0], "laser": [1, 1, 0]}
+# inventory: "название предмета": доступноИгроку1, доступноИгроку2, минимум, максимум
+inventory = {"wall": [32, 32, 20, 32], "spawn": [1, 1, 1, 1], "slow": [3, 3, 0, 3], "shield": [1, 1, 1, 1],
+             "heal": [2, 2, 0, 1], "laser": [1, 1, 0, 1]}
 
 currentPlayerMove = playerBuilder = random.randint(0, 1)  # определить случайно чей первый ход
 controlsPng = pygame.image.load("img/управление.png")
@@ -43,7 +43,7 @@ player_controls = {"up": [pygame.K_w, pygame.K_u, "W", "U"], "down": [pygame.K_s
                    "right": [pygame.K_d, pygame.K_k, "D", "K"], "left": [pygame.K_a, pygame.K_h, "A", "H"],
                    "up_left": [pygame.K_q, pygame.K_y, "Q", "Y"], "up_right": [pygame.K_e, pygame.K_i, "E", "I"],
                    "down_right": [pygame.K_c, pygame.K_m, "C", "M"], "down_left": [pygame.K_z, pygame.K_b, "Z", "B"]}
-
+double_move = False  # игрок ходит дважды в случае True
 """
 for i in range(1, field_size - 1):  # случайная расстановка стен для теста
     rnd = random.randrange(field_size)
@@ -72,9 +72,18 @@ def game_field_update(p_name, x, y):  # обновление данных игр
         currentPlayerMove = 1
     else:
         currentPlayerMove = 0
-    game_field[players[p_num][0]][players[p_num][1]] = '0'
+
+    if game_field[x][y].startswith('slow'):  # клетка, в которую происходит переход
+        game_field[players[p_num][0]][players[p_num][1]] = '0'  # нынешняя клетка игрока
+    else:
+        game_field[players[p_num][0]][players[p_num][1]] = \
+            game_field[players[p_num][0]][players[p_num][1]].split('|')[-1]  # нынешняя клетка игрока
+
     players[p_num] = [x, y]
-    game_field[x][y] = p_name
+    if game_field[x][y] == 'slow':
+        game_field[x][y] = 'slow|' + p_name
+    else:
+        game_field[x][y] = p_name
 
 
 def fill_2x2_cells(left_upper_coord):  # заполнить координаты клеток квадрата 2x2
@@ -93,6 +102,7 @@ def fill_indexes_diagonal_cells():  # заполнить индексы диаг
 
 
 def is_move_correct(x, y):  # проверка корректности хода при передвижении игрока
+
     if x < 0 or x >= field_size or y < 0 or y >= field_size:  # выход игрока за границы поля
         return False
     # столкновение игрока с запрещённым объектом
@@ -120,6 +130,16 @@ def is_building_correct(player_num, item_num):  # проверка коррек�
             if (currentCursorCell[1] < indexes_diagonal_cells[currentCursorCell[0]][1] and playerBuilder == 1 or
                     currentCursorCell[1] > indexes_diagonal_cells[currentCursorCell[0]][1] and playerBuilder == 0):
                 return False
+    return True
+
+# взять у игрока предмет из инвентаря
+def take_from_inventory(player_num, item_num):
+    global inventory
+    # item = list(inventory.values())[item_num]
+    if list(inventory.values())[item_num][player_num] > 0:
+        inventory[list(inventory.keys())[item_num]][player_num] -= 1
+    else:
+        return False
     return True
 
 
@@ -198,6 +218,9 @@ while True:
             # 2-ая часть ширины экрана - до конца игрового поля
             elif event.pos[0] < field_size * cell_size + inventoryPngWidth:
                 if itemChosen != 0 and is_building_correct(playerBuilder, itemChosen):
+                    if not(take_from_inventory(playerBuilder, itemChosen - 1)):
+                        continue
+                    print(inventory)
                     if itemChosen == 4:
                         for cellCoord2x2 in square2x2AllCells:
                             game_field[cellCoord2x2[0]][cellCoord2x2[1]] = list(inventory.keys())[itemChosen - 1]

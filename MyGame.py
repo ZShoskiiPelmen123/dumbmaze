@@ -8,9 +8,9 @@ field_size = 14  # количество клеток поля
 cell_size = 30  # ширина одной клетки в пикселях
 width = height = field_size * cell_size  # Ширина, высота экрана
 FPS = 60  # Число кадров в секунду
-
-inventory = {"wall": [32, 32, 20], "spawn": [1, 1, 1], "slow": [3, 3, 0], "shield": [1, 1, 1],
-             "heal": [2, 2, 0], "laser": [1, 1, 0]}
+# inventory: "название предмета": доступноИгроку1, доступноИгроку2, минимум, максимум
+inventory = {"wall": [32, 32, 20, 32], "spawn": [1, 1, 1, 1], "slow": [3, 3, 0, 3], "shield": [1, 1, 1, 1],
+             "heal": [2, 2, 0, 1], "laser": [1, 1, 0, 1]}
 
 currentPlayerMove = playerBuilder = random.randint(0, 1)  # определить случайно чей первый ход
 controlsPng = pygame.image.load("img/управление.png")
@@ -72,9 +72,15 @@ def game_field_update(p_name, x, y):  # обновление данных игр
         currentPlayerMove = 1
     else:
         currentPlayerMove = 0
-    game_field[players[p_num][0]][players[p_num][1]] = '0'
-    players[p_num] = [x, y]
-    game_field[x][y] = p_name
+    new_name = p_name
+    if game_field[x][y] == 'slow':  # клетка, в которую происходит переход
+        new_name = "slow|" + new_name
+    if game_field[players[p_num][0]][players[p_num][1]].startswith("slow|"):  # нынешняя клетка игрока
+        game_field[players[p_num][0]][players[p_num][1]] = "slow"
+    else:
+        game_field[players[p_num][0]][players[p_num][1]] = '0'
+    players[p_num] = [x, y]  # новые координаты игрока
+    game_field[x][y] = new_name
 
 
 def fill_2x2_cells(left_upper_coord):  # заполнить координаты клеток квадрата 2x2
@@ -95,8 +101,8 @@ def fill_indexes_diagonal_cells():  # заполнить индексы диаг
 def is_move_correct(x, y):  # проверка корректности хода при передвижении игрока
     if x < 0 or x >= field_size or y < 0 or y >= field_size:  # выход игрока за границы поля
         return False
-    # столкновение игрока с запрещённым объектом
-    if game_field[x][y] in inventory.keys() | ["player1", "player2"]:
+    # столкновение игрока с объектом, запрещённым для прохода сквозь него
+    if not (game_field[x][y] == "0" or game_field[x][y] in ["slow"]):
         return False
     return True
 
@@ -120,6 +126,16 @@ def is_building_correct(player_num, item_num):  # проверка коррек�
                     currentCursorCell[1] > indexes_diagonal_cells[currentCursorCell[0]][1] and playerBuilder == 0):
                 return False
     return True
+
+
+# взять у игрока предмет из инвентаря
+def take_from_inventory(player_num, item_num):
+    global inventory
+    if list(inventory.values())[item_num][player_num] > 0:  # оставшееся кол-во > 0
+        inventory[list(inventory.keys())[item_num]][player_num] -= 1  # уменьшить кол-во
+    else:
+        return False  # не удалось взять предмет (их нет)
+    return True  # предмет успешно взят
 
 
 def calc_current_cursor_cell(x, y):  # вычисление текущих координат курсора
@@ -197,6 +213,8 @@ while True:
             # 2-ая часть ширины экрана - до конца игрового поля
             elif event.pos[0] < field_size * cell_size + inventoryPngWidth:
                 if itemChosen != 0 and is_building_correct(playerBuilder, itemChosen):
+                    if not(take_from_inventory(playerBuilder, itemChosen - 1)):
+                        continue
                     if itemChosen == 4:
                         for cellCoord2x2 in square2x2AllCells:
                             game_field[cellCoord2x2[0]][cellCoord2x2[1]] = list(inventory.keys())[itemChosen - 1]
@@ -304,9 +322,9 @@ while True:
             if game_field[i][j] != 0:
                 square.x = i * cell_size + inventoryPngWidth
                 square.y = j * cell_size
-            if game_field[i][j] == "player1":
+            if game_field[i][j] in ["player1", "slow|player1"]:
                 pygame.draw.rect(sc, (255, 0, 0), square)
-            elif game_field[i][j] == "player2":
+            elif game_field[i][j] in ["player2", "slow|player2"]:
                 pygame.draw.rect(sc, (0, 128, 0), square)
             elif game_field[i][j] == "wall":
                 pygame.draw.rect(sc, (128, 128, 128), square)

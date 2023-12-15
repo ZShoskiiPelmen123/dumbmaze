@@ -72,18 +72,15 @@ def game_field_update(p_name, x, y):  # обновление данных игр
         currentPlayerMove = 1
     else:
         currentPlayerMove = 0
-
-    if game_field[x][y].startswith('slow'):  # клетка, в которую происходит переход
-        game_field[players[p_num][0]][players[p_num][1]] = '0'  # нынешняя клетка игрока
+    new_name = p_name
+    if game_field[x][y] == 'slow':  # клетка, в которую происходит переход
+        new_name = "slow|" + new_name
+    if game_field[players[p_num][0]][players[p_num][1]].startswith("slow|"):  # нынешняя клетка игрока
+        game_field[players[p_num][0]][players[p_num][1]] = "slow"
     else:
-        game_field[players[p_num][0]][players[p_num][1]] = \
-            game_field[players[p_num][0]][players[p_num][1]].split('|')[-1]  # нынешняя клетка игрока
-
-    players[p_num] = [x, y]
-    if game_field[x][y] == 'slow':
-        game_field[x][y] = 'slow|' + p_name
-    else:
-        game_field[x][y] = p_name
+        game_field[players[p_num][0]][players[p_num][1]] = '0'
+    players[p_num] = [x, y]  # новые координаты игрока
+    game_field[x][y] = new_name
 
 
 def fill_2x2_cells(left_upper_coord):  # заполнить координаты клеток квадрата 2x2
@@ -102,12 +99,10 @@ def fill_indexes_diagonal_cells():  # заполнить индексы диаг
 
 
 def is_move_correct(x, y):  # проверка корректности хода при передвижении игрока
-
     if x < 0 or x >= field_size or y < 0 or y >= field_size:  # выход игрока за границы поля
         return False
-    # столкновение игрока с запрещённым объектом
-    if (game_field[x][y] not in ["slow"] and
-            game_field[x][y] in inventory.keys() | ["player1", "player2"]):
+    # столкновение игрока с объектом, запрещённым для прохода сквозь него
+    if not (game_field[x][y] == "0" or game_field[x][y] in ["slow"]):
         return False
     return True
 
@@ -131,6 +126,7 @@ def is_building_correct(player_num, item_num):  # проверка коррек�
                     currentCursorCell[1] > indexes_diagonal_cells[currentCursorCell[0]][1] and playerBuilder == 0):
                 return False
     return True
+
 
 # взять у игрока предмет из инвентаря
 def take_from_inventory(player_num, item_num):
@@ -328,9 +324,9 @@ while True:
             if game_field[i][j] != 0:
                 square.x = i * cell_size + inventoryPngWidth
                 square.y = j * cell_size
-            if game_field[i][j] == "player1":
+            if game_field[i][j] in ["player1", "slow|player1"]:
                 pygame.draw.rect(sc, (255, 0, 0), square)
-            elif game_field[i][j] == "player2":
+            elif game_field[i][j] in ["player2", "slow|player2"]:
                 pygame.draw.rect(sc, (0, 128, 0), square)
             elif game_field[i][j] == "wall":
                 pygame.draw.rect(sc, (128, 128, 128), square)

@@ -13,8 +13,8 @@ inventory = {"wall": [32, 32, 20, 32], "spawn": [1, 1, 1, 1], "slow": [3, 3, 0, 
              "heal": [2, 2, 0, 1], "laser": [1, 1, 0, 1]}
 
 currentPlayerMove = playerBuilder = random.randint(0, 1)  # определить случайно чей первый ход
-controlsPng = pygame.image.load("img/управление.png")
-inventoryImg = pygame.image.load("img/инвентарь.png")
+controlsPng = pygame.image.load("app/img/управление.png")
+inventoryImg = pygame.image.load("app/img/инвентарь.png")
 inventoryPngWidth = inventoryImg.get_width()
 controlsPngWidth = controlsPng.get_width()
 shift = 14
@@ -53,10 +53,12 @@ def game_field_update(p_name, x, y):  # обновление данных игр
         return
     currentPlayerMove = 1 if p_name == "player1" else 0
     new_name = p_name
-    if game_field[x][y] == 'slow':  # клетка, в которую происходит переход
-        new_name = "slow|" + new_name
-    if game_field[players[p_num][0]][players[p_num][1]].startswith("slow|"):  # нынешняя клетка игрока
-        game_field[players[p_num][0]][players[p_num][1]] = "slow"
+    if game_field[x][y] in ['slow1', 'slow2']:  # клетка, в которую происходит переход
+        new_name = game_field[x][y] + "|" + new_name
+    if game_field[players[p_num][0]][players[p_num][1]].startswith("slow1|"):  # нынешняя клетка игрока
+        game_field[players[p_num][0]][players[p_num][1]] = "slow1"
+    elif game_field[players[p_num][0]][players[p_num][1]].startswith("slow2|"):  # нынешняя клетка игрока
+        game_field[players[p_num][0]][players[p_num][1]] = "slow2"
     else:
         game_field[players[p_num][0]][players[p_num][1]] = '0'
     players[p_num] = [x, y]  # новые координаты игрока
@@ -82,7 +84,7 @@ def is_move_correct(x, y):  # проверка корректности хода
     if x < 0 or x >= field_size or y < 0 or y >= field_size:  # выход игрока за границы поля
         return False
     # столкновение игрока с объектом, запрещённым для прохода сквозь него
-    if not (game_field[x][y] == "0" or game_field[x][y] in ["slow"]):
+    if not (game_field[x][y] == "0" or game_field[x][y] in ["slow1", "slow2"]):
         return False
     return True
 
@@ -180,11 +182,14 @@ while True:
             # 2-я часть ширины экрана - до конца игрового поля
             elif event.pos[0] < field_size * cell_size + inventoryPngWidth:
                 if itemChosen != 0 and is_building_correct(itemChosen):
-                    if not(take_from_inventory(playerBuilder, itemChosen - 1)):
+                    if not (take_from_inventory(playerBuilder, itemChosen - 1)):
                         continue
                     if itemChosen == 4:
                         for cellCoord2x2 in square2x2AllCells:
                             game_field[cellCoord2x2[0]][cellCoord2x2[1]] = list(inventory.keys())[itemChosen - 1]
+                    elif itemChosen == 3:
+                        game_field[currentCursorCell[0]][currentCursorCell[1]] = (list(inventory.keys())[itemChosen - 1]
+                                                                                  + str(playerBuilder + 1))
                     else:
                         game_field[currentCursorCell[0]][currentCursorCell[1]] = list(inventory.keys())[itemChosen - 1]
         if event.type == pygame.MOUSEMOTION:
@@ -274,9 +279,9 @@ while True:
             if game_field[i][j] != 0:
                 square.x = i * cell_size + inventoryPngWidth
                 square.y = j * cell_size
-            if game_field[i][j] in ["player1", "slow|player1"]:
+            if game_field[i][j] in ["player1", "slow1|player1", "slow2|player1"]:
                 pygame.draw.rect(sc, (255, 0, 0), square)
-            elif game_field[i][j] in ["player2", "slow|player2"]:
+            elif game_field[i][j] in ["player2", "slow1|player2", "slow2|player2"]:
                 pygame.draw.rect(sc, (0, 128, 0), square)
             elif game_field[i][j] == "wall":
                 pygame.draw.rect(sc, (128, 128, 128), square)
@@ -284,8 +289,10 @@ while True:
                 pygame.draw.rect(sc, (0, 64, 255), square)
             elif game_field[i][j] == "spawn":
                 pygame.draw.rect(sc, (128, 64, 64), square)
-            elif game_field[i][j] == "slow":
-                pygame.draw.rect(sc, (0, 255, 255), square)
+            elif game_field[i][j] in ["slow1"]:
+                pygame.draw.rect(sc, (0, 123, 255), square)
+            elif game_field[i][j] in ["slow2"]:
+                pygame.draw.rect(sc, (0, 255, 123), square)
             elif game_field[i][j] == "heal":
                 pygame.draw.rect(sc, (255, 0, 255), square)
             elif game_field[i][j] == "laser":

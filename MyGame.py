@@ -20,11 +20,8 @@ controlsPngWidth = controlsPng.get_width()
 shift = 14
 itemChosen = 1  # выбранный для расстановки предмет инвентаря
 inventoryPixelShift = 14
-firstButtonCoord = [160, 19]
-isBuildingCorrect = 0
 leftUpperSquare2x2 = [0, 0]  # координаты верхнего левого угла квадрата 2x2
 square2x2AllCells = []  # координаты всех клеток квадрата 2x2
-buildings = []
 indexes_diagonal_cells = []  # индексы диагональных элементов
 currentCursorCell = [0, 0]  # текущая клетка поля под курсором
 print("currentPlayerMove = ", "красный" if currentPlayerMove == 0 else "зелёный")
@@ -37,23 +34,12 @@ players = [[0, 0], [field_size - 1, field_size - 1]]  # координаты и�
 
 game_field[players[0][0]][players[0][1]] = "player1"  # расположить игрока_1 на поле
 game_field[players[1][0]][players[1][1]] = "player2"  # расположить игрока_2 на поле
-walls = []  # список стен
 square_color = (0, 0, 0)
-player_controls = {"up": [pygame.K_w, pygame.K_u, "W", "U"], "down": [pygame.K_s, pygame.K_j, "S", "J"],
-                   "right": [pygame.K_d, pygame.K_k, "D", "K"], "left": [pygame.K_a, pygame.K_h, "A", "H"],
-                   "up_left": [pygame.K_q, pygame.K_y, "Q", "Y"], "up_right": [pygame.K_e, pygame.K_i, "E", "I"],
-                   "down_right": [pygame.K_c, pygame.K_m, "C", "M"], "down_left": [pygame.K_z, pygame.K_b, "Z", "B"]}
-
-"""
-for i in range(1, field_size - 1):  # случайная расстановка стен для теста
-    rnd = random.randrange(field_size)
-    walls.append([i, rnd])
-    game_field[i][rnd] = "wall"
-"""
-
-
-class Inventory:
-    items = []
+# "НазваниеНаправленияДвижения": [клавишаПервогоИгрока, клавишаВторогоИгрока, смещениеПоИксу, смещениеПоИгреку]
+player_controls = {"up": [pygame.K_w, pygame.K_u, 0, -1], "down": [pygame.K_s, pygame.K_j, 0, 1],
+                   "left": [pygame.K_a, pygame.K_h, -1, 0], "right": [pygame.K_d, pygame.K_k, 1, 0],
+                   "up_left": [pygame.K_q, pygame.K_y, -1, -1], "up_right": [pygame.K_e, pygame.K_i, 1, -1],
+                   "down_left": [pygame.K_z, pygame.K_b, -1, 1], "down_right": [pygame.K_c, pygame.K_m, 1, 1]}
 
 
 def game_field_update(p_name, x, y):  # обновление данных игрового поля
@@ -61,17 +47,11 @@ def game_field_update(p_name, x, y):  # обновление данных игр
     if (p_name == "player1" and currentPlayerMove == 1) or (p_name == "player2" and currentPlayerMove == 0):
         return
     # print(*game_field, sep='\n')
-    if p_name == "player1":
-        p_num = 0
-    else:
-        p_num = 1
+    p_num = 0 if p_name == "player1" else 1
     x, y = players[p_num][0] + x, players[p_num][1] + y  # вычисление новых координат игрока
     if not is_move_correct(x, y):
         return
-    if p_name == "player1":
-        currentPlayerMove = 1
-    else:
-        currentPlayerMove = 0
+    currentPlayerMove = 1 if p_name == "player1" else 0
     new_name = p_name
     if game_field[x][y] == 'slow':  # клетка, в которую происходит переход
         new_name = "slow|" + new_name
@@ -107,7 +87,7 @@ def is_move_correct(x, y):  # проверка корректности хода
     return True
 
 
-def is_building_correct(player_num, item_num):  # проверка корректности размещения объекта на поле
+def is_building_correct(item_num):  # проверка корректности размещения объекта на поле
     obj_cells = [currentCursorCell]
     if item_num == 4:
         fill_2x2_cells(leftUpperSquare2x2)
@@ -143,35 +123,22 @@ def calc_current_cursor_cell(x, y):  # вычисление текущих ко�
     currentCursorCell = [int((x - inventoryPngWidth) / cell_size), int(y / cell_size)]
 
 
-def draw_rect_current_cursor_cell():  # нарисовать квадрат под курсором
-    square.x = currentCursorCell[0] * cell_size + inventoryPngWidth
-    square.y = currentCursorCell[1] * cell_size
-    pygame.draw.rect(sc, square_color, square)
+def draw_rect_current_cursor_cell(size):  # нарисовать квадрат длиной size под курсором
+    temp_cell = currentCursorCell if size == 1 else leftUpperSquare2x2
+    x = temp_cell[0] * cell_size + inventoryPngWidth
+    y = temp_cell[1] * cell_size
+    temp_square = pygame.Rect(x, y, cell_size * size, cell_size * size)
+    pygame.draw.rect(sc, square_color, temp_square)
 
 
-def draw_rect_2x2_current_cursor_cell():  # нарисовать квадрат 2x2 под курсором
-    square.x = leftUpperSquare2x2[0] * cell_size + inventoryPngWidth
-    square.y = leftUpperSquare2x2[1] * cell_size
-    square_2x2 = pygame.Rect(square.x, square.y, cell_size * 2, cell_size * 2)
-    pygame.draw.rect(sc, square_color, square_2x2)
-
-
-def set_drawing_color():
+def set_drawing_color(size):
     global square_color
-    if is_building_correct(playerBuilder, itemChosen):
-        if currentCursorCell in indexes_diagonal_cells:
-            square_color = (255, 128, 0)
-        else:
-            square_color = (0, 255, 0)
-    else:
-        square_color = (255, 0, 0)
-
-
-def set_drawing_color_2x2():
-    global square_color
-    if is_building_correct(playerBuilder, itemChosen):
-        if ([leftUpperSquare2x2[0] + 1, leftUpperSquare2x2[1] + 1] in indexes_diagonal_cells and playerBuilder == 0 or
-                [leftUpperSquare2x2[0], leftUpperSquare2x2[1]] in indexes_diagonal_cells and playerBuilder == 1):
+    lus = leftUpperSquare2x2
+    if is_building_correct(itemChosen):
+        if (size == 1 and currentCursorCell in indexes_diagonal_cells or
+            size == 2 and
+            (playerBuilder == 0 and [lus[0] + 1, lus[1] + 1] in indexes_diagonal_cells or
+             playerBuilder == 1 and [lus[0], lus[1]] in indexes_diagonal_cells)):
             square_color = (255, 128, 0)
         else:
             square_color = (0, 255, 0)
@@ -188,7 +155,7 @@ while True:
             pygame.quit()
             sys.exit(0)
         if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-            # 1-ая часть ширины экрана - до конца инвентаря
+            # 1-я часть ширины экрана - до конца инвентаря
             if event.pos[0] < inventoryPngWidth:
                 if 3 < event.pos[1] < 14:
                     if 12 > event.pos[0] > 1 == playerBuilder:
@@ -210,9 +177,9 @@ while True:
                     elif 67 < event.pos[1] < 79:
                         itemChosen = 4
                         print("четвёртый предмет выбран")
-            # 2-ая часть ширины экрана - до конца игрового поля
+            # 2-я часть ширины экрана - до конца игрового поля
             elif event.pos[0] < field_size * cell_size + inventoryPngWidth:
-                if itemChosen != 0 and is_building_correct(playerBuilder, itemChosen):
+                if itemChosen != 0 and is_building_correct(itemChosen):
                     if not(take_from_inventory(playerBuilder, itemChosen - 1)):
                         continue
                     if itemChosen == 4:
@@ -227,7 +194,7 @@ while True:
                     calc_current_cursor_cell(event.pos[0], event.pos[1])
                     leftUpperSquare2x2 = currentCursorCell
                     if old_cell != currentCursorCell:
-                        set_drawing_color()
+                        set_drawing_color(1)
                 # блок вычисления координат верхнего левого угла квадрата 2x2
                 # для отображения на поле при расстановке объектов
                 elif itemChosen == 4:
@@ -261,16 +228,16 @@ while True:
                         # курсор ни в одной из клеток нарисованного квадрата
                         elif not (currentCursorCell[0] in (leftUpperSquare2x2[0], leftUpperSquare2x2[0] + 1) and
                                   (currentCursorCell[1] in (leftUpperSquare2x2[1], leftUpperSquare2x2[1] + 1))):
-                            # курсор в нижнем правом углу
+                            # курсор в нижнем правом углу игрового поля
                             if currentCursorCell[0] == currentCursorCell[1] == field_size - 1:
                                 leftUpperSquare2x2 = currentCursorCell
                                 leftUpperSquare2x2[0] -= 1
                                 leftUpperSquare2x2[1] -= 1
-                            # курсор на последнем столбце
+                            # курсор на последнем столбце игрового поля
                             elif currentCursorCell[0] == field_size - 1:
                                 leftUpperSquare2x2 = currentCursorCell
                                 leftUpperSquare2x2[0] -= 1
-                            # курсор на последней строке
+                            # курсор на последней строке игрового поля
                             elif currentCursorCell[1] == field_size - 1:
                                 leftUpperSquare2x2 = currentCursorCell
                                 leftUpperSquare2x2[1] -= 1
@@ -278,26 +245,11 @@ while True:
                                 leftUpperSquare2x2 = currentCursorCell
         # управление игроками с клавиатуры
         if event.type == pygame.KEYDOWN:
-            if event.key in [i[0] for i in player_controls.values()]:
-                player_name = "player1"
-            else:
-                player_name = "player2"
-            if event.key in player_controls["up"]:
-                game_field_update(player_name, 0, -1)
-            if event.key in player_controls["down"]:
-                game_field_update(player_name, 0, 1)
-            if event.key in player_controls["right"]:
-                game_field_update(player_name, 1, 0)
-            if event.key in player_controls["left"]:
-                game_field_update(player_name, -1, 0)
-            if event.key in player_controls["up_left"]:
-                game_field_update(player_name, -1, -1)
-            if event.key in player_controls["up_right"]:
-                game_field_update(player_name, 1, -1)
-            if event.key in player_controls["down_right"]:
-                game_field_update(player_name, 1, 1)
-            if event.key in player_controls["down_left"]:
-                game_field_update(player_name, -1, 1)
+            player_name = "player1" if event.key in [i[0] for i in player_controls.values()] else "player2"
+            for value in player_controls.values():
+                if event.key in [value[0], value[1]]:
+                    game_field_update(player_name, value[2], value[3])
+                    break
 
     sc.fill((0, 0, 0))
     # прорисовка поля линиями для визуального разделения его на клетки
@@ -310,10 +262,10 @@ while True:
     sc.blit(inventoryImg, (0, 0))
     # динамическая прорисовка объекта при их расстановке на поле
     if itemChosen != 4:
-        draw_rect_current_cursor_cell()
+        draw_rect_current_cursor_cell(1)
     elif itemChosen == 4 and leftUpperSquare2x2 != (0, 0):
-        set_drawing_color_2x2()
-        draw_rect_2x2_current_cursor_cell()
+        set_drawing_color(2)
+        draw_rect_current_cursor_cell(2)
     # прорисовка диагональной линии
     pygame.draw.line(sc, (128, 128, 128), (width + inventoryPngWidth, 0), (inventoryPngWidth, width))
     # прорисовка объектов по матрице, состоящей из индексов элементов поля

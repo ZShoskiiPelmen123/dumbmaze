@@ -35,6 +35,9 @@ players = [[0, 0], [field_size - 1, field_size - 1]]  # координаты и�
 game_field[players[0][0]][players[0][1]] = "player1"  # расположить игрока_1 на поле
 game_field[players[1][0]][players[1][1]] = "player2"  # расположить игрока_2 на поле
 square_color = (0, 0, 0)
+# Данные игроков: имя, номер, кол-во жизней, макс. кол-во жизней, двойнойХод
+playerData = [{"name": "player1", "playerNum": 0, "health": 3, "maxHealth": 3, "doubleMove": False},
+              {"name": "player2", "playerNum": 1, "health": 3, "maxHealth": 3, "doubleMove": False}]
 # "НазваниеНаправленияДвижения": [клавишаПервогоИгрока, клавишаВторогоИгрока, смещениеПоИксу, смещениеПоИгреку]
 player_controls = {"up": [pygame.K_w, pygame.K_u, 0, -1], "down": [pygame.K_s, pygame.K_j, 0, 1],
                    "left": [pygame.K_a, pygame.K_h, -1, 0], "right": [pygame.K_d, pygame.K_k, 1, 0],
@@ -44,24 +47,33 @@ player_controls = {"up": [pygame.K_w, pygame.K_u, 0, -1], "down": [pygame.K_s, p
 
 def game_field_update(p_name, x, y):  # обновление данных игрового поля
     global currentPlayerMove
+    # если игрок, пытающийся сделать ход сейчас не должен ходить, то выход из функции
     if (p_name == "player1" and currentPlayerMove == 1) or (p_name == "player2" and currentPlayerMove == 0):
         return
     # print(*game_field, sep='\n')
-    p_num = 0 if p_name == "player1" else 1
-    x, y = players[p_num][0] + x, players[p_num][1] + y  # вычисление новых координат игрока
+    cpm = currentPlayerMove  # порядковый номер игрока, делающего ход (0 или 1)
+    x, y = players[cpm][0] + x, players[cpm][1] + y  # вычисление новых координат игрока
     if not is_move_correct(x, y):
         return
-    currentPlayerMove = 1 if p_name == "player1" else 0
+    if playerData[cpm]["doubleMove"] and playerData[cpm ^ 1]["doubleMove"]:  # если оба True
+        playerData[cpm]["doubleMove"] = playerData[cpm ^ 1]["doubleMove"] = False  # выключить двойной ход у обоих
+        currentPlayerMove = currentPlayerMove ^ 1  # переход хода другому игроку
+    elif not playerData[cpm]["doubleMove"]:  # если НЕ двойной ход у игрока, делающего ход
+        currentPlayerMove = currentPlayerMove ^ 1  # переход хода другому игроку
+    else:
+        playerData[cpm]["doubleMove"] = False  # выключить двойной ход без смены игрока
     new_name = p_name
     if game_field[x][y] in ['slow1', 'slow2']:  # клетка, в которую происходит переход
         new_name = game_field[x][y] + "|" + new_name
-    if game_field[players[p_num][0]][players[p_num][1]].startswith("slow1|"):  # нынешняя клетка игрока
-        game_field[players[p_num][0]][players[p_num][1]] = "slow1"
-    elif game_field[players[p_num][0]][players[p_num][1]].startswith("slow2|"):  # нынешняя клетка игрока
-        game_field[players[p_num][0]][players[p_num][1]] = "slow2"
-    else:
-        game_field[players[p_num][0]][players[p_num][1]] = '0'
-    players[p_num] = [x, y]  # новые координаты игрока
+        if p_name[-1] != game_field[x][y][-1]:  # игрок попал в чужое замедление
+            playerData[cpm ^ 1]["doubleMove"] = True  # двойной ход другому игроку
+    new_value = '0'
+    if game_field[players[cpm][0]][players[cpm][1]].startswith("slow1|"):  # нынешняя клетка игрока
+        new_value = "slow1"
+    elif game_field[players[cpm][0]][players[cpm][1]].startswith("slow2|"):  # нынешняя клетка игрока
+        new_value = "slow2"
+    game_field[players[cpm][0]][players[cpm][1]] = new_value
+    players[cpm] = [x, y]  # новые координаты игрока
     game_field[x][y] = new_name
 
 
@@ -137,10 +149,12 @@ def set_drawing_color(size):
     global square_color
     lus = leftUpperSquare2x2
     if is_building_correct(itemChosen):
-        if (size == 1 and currentCursorCell in indexes_diagonal_cells or
+        if (
+            size == 1 and currentCursorCell in indexes_diagonal_cells or
             size == 2 and
-            (playerBuilder == 0 and [lus[0] + 1, lus[1] + 1] in indexes_diagonal_cells or
-             playerBuilder == 1 and [lus[0], lus[1]] in indexes_diagonal_cells)):
+                (playerBuilder == 0 and [lus[0] + 1, lus[1] + 1] in indexes_diagonal_cells or
+                 playerBuilder == 1 and [lus[0], lus[1]] in indexes_diagonal_cells)
+        ):
             square_color = (255, 128, 0)
         else:
             square_color = (0, 255, 0)
